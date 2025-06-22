@@ -4,7 +4,7 @@ import pandas as pd
 
 from valtapy.interfaces import IValidator, ValidationBranch
 from valtapy.validators.utility.efficiency import EfficiencyValidator
-from valtapy.validators.utility.efficiency.ml_effiency.methods import (
+from valtapy.validators.utility.ml_effiency.methods import (
     TRTSValidator,
     TSTRValidator,
     TTRRValidator,
