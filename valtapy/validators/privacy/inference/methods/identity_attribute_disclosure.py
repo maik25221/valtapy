@@ -1,24 +1,18 @@
-import numpy as np
-import torch
-import pandas as pd
-from Hefesto.train_test.test.privacy import Privacy
+from typing import Any, Dict
 
-class IdentityAttributeDisclosure(Privacy):
-    def __init__(self, data, gen_data, path: str):
+import numpy as np
+import pandas as pd
+
+from ...base_privacy import Privacy
+
+
+class IdentityAttributeDisclosureInference(Privacy):
+    def __init__(self, data, gen_data, path: str = None):
         super().__init__(data=data, gen_data=gen_data, path=path)
         self.attribute_disclosure_rate = None
         self.identity_disclosure_rate = None
 
-    def to_numpy(self, data):
-        """
-        Convert data to NumPy array if it is not already.
-        """
-        if isinstance(data, np.ndarray):
-            return data
-        elif isinstance(data, torch.Tensor):
-            return data.detach().cpu().numpy()
-        else:
-            return data.to_numpy()
+    # Eliminar la función to_numpy ya que la heredamos de Privacy
 
     def simulate_attribute_attack(self, known_attributes_percentage=0.01):
         """
@@ -30,12 +24,14 @@ class IdentityAttributeDisclosure(Privacy):
 
         num_attributes = original_data.shape[1]
         num_known_attributes = int(num_attributes * known_attributes_percentage)
-        
+
         correct_guesses = 0
         total_guesses = 0
 
         for original_record, synthetic_record in zip(original_data, synthetic_data):
-            known_indices = np.random.choice(num_attributes, num_known_attributes, replace=False)
+            known_indices = np.random.choice(
+                num_attributes, num_known_attributes, replace=False
+            )
             known_attributes = original_record[known_indices]
 
             synthetic_known_attributes = synthetic_record[known_indices]
@@ -62,11 +58,23 @@ class IdentityAttributeDisclosure(Privacy):
         self.identity_disclosure_rate = matches / len(original_data)
 
     def write_results(self):
-        with open(self.path, "w") as file:
-            file.write(f"Attribute Disclosure Rate: {self.attribute_disclosure_rate}\n")
-            file.write(f"Identity Disclosure Rate: {self.identity_disclosure_rate}\n")
+        if self.path:
+            with open(self.path, "w") as file:
+                file.write(
+                    f"Attribute Disclosure Rate: {self.attribute_disclosure_rate}\n"
+                )
+                file.write(
+                    f"Identity Disclosure Rate: {self.identity_disclosure_rate}\n"
+                )
 
-    def execute(self):
+    def execute(self) -> Dict[str, Any]:
         self.simulate_attribute_attack()
         self.simulate_identity_attack()
-        self.write_results()
+        if self.path:
+            self.write_results()
+
+        return {
+            "attribute_disclosure_rate": self.attribute_disclosure_rate,
+            "identity_disclosure_rate": self.identity_disclosure_rate,
+            "description": "Inference-based identity and attribute disclosure risk assessment",
+        }

@@ -1,31 +1,40 @@
+from typing import Any, Dict
+
 import numpy as np
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score
-from sklearn.ensemble import RandomForestClassifier
 from sklearn import tree
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score
+from sklearn.model_selection import train_test_split
 from sklearn.neighbors import KNeighborsClassifier
-from Hefesto.train_test.test.privacy import Privacy
+
+from ...base_privacy import Privacy
 
 
 class MembershipInferenceAttack(Privacy):
-    def __init__(self, data, gen_data, path: str):
+    def __init__(self, data, gen_data, path: str = None):
         super().__init__(data=data, gen_data=gen_data, path=path)
         self.attack_model = None
         self.attack_results = None
 
     def split_data(self, test_size=0.5):
         """Divide los datos en un conjunto de entrenamiento y un conjunto de prueba."""
-        # self.data += np.random.normal(size=self.data.shape) * 0.01
+        # Convert to numpy arrays
+        original_data = self.to_numpy(self.data)
+        synthetic_data = self.to_numpy(self.gen_data)
+
+        # Add small amount of noise to avoid perfect duplicates
+        # original_data += np.random.normal(size=original_data.shape) * 0.01
+
         X_train, X_test, y_train, y_test = train_test_split(
-            self.data,
-            np.ones(len(self.data)),
+            original_data,
+            np.ones(len(original_data)),
             test_size=test_size,
             random_state=self.seed - 1,
         )
         X_gen_train, X_gen_test, y_gen_train, y_gen_test = train_test_split(
-            self.gen_data,
-            np.zeros(len(self.gen_data)),
+            synthetic_data,
+            np.zeros(len(synthetic_data)),
             test_size=test_size,
             random_state=self.seed + 1,
         )
@@ -57,9 +66,18 @@ class MembershipInferenceAttack(Privacy):
         self.attack_results = accuracy
 
     def write_results(self):
-        with open(self.path, "w") as file:
-            file.write(f"Membership Inference Attack Accuracy: {self.attack_results}\n")
+        if self.path:
+            with open(self.path, "w") as file:
+                file.write(
+                    f"Membership Inference Attack Accuracy: {self.attack_results}\n"
+                )
 
-    def execute(self):
+    def execute(self) -> Dict[str, Any]:
         self.execute_attack()
-        self.write_results()
+        if self.path:
+            self.write_results()
+
+        return {
+            "membership_inference_accuracy": self.attack_results,
+            "description": "Membership inference attack success rate - lower is better for privacy",
+        }

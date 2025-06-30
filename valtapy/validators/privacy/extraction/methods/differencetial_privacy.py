@@ -1,9 +1,12 @@
+from typing import Any, Dict
+
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader, TensorDataset
-from Hefesto.train_test.test.privacy import Privacy
+
+from ...base_privacy import Privacy
 
 
 class DifferentialPrivacyModel(nn.Module):
@@ -16,13 +19,25 @@ class DifferentialPrivacyModel(nn.Module):
 
 
 class DifferentialPrivacy(Privacy):
-    def __init__(self, data, gen_data, path: str, epsilon=1.0, delta=1e-5):
+    def __init__(self, data, gen_data, path: str = None, epsilon=1.0, delta=1e-5):
         super().__init__(data=data, gen_data=gen_data, path=path)
         self.epsilon = epsilon
         self.delta = delta
         self.model = None
-        self.loss_fn = nn.MSELoss()
-        self.optimizer = None
+        self.privacy_loss = None
+
+        # Try to import torch, if not available use simple implementation
+        try:
+            import torch
+            import torch.nn as nn
+            import torch.optim as optim
+            from torch.utils.data import DataLoader, TensorDataset
+
+            self.torch_available = True
+            self.loss_fn = nn.MSELoss()
+            self.optimizer = None
+        except ImportError:
+            self.torch_available = False
 
     def add_laplace_noise(self, scale):
         return torch.from_numpy(np.random.laplace(0, scale, 1).astype(np.float32))

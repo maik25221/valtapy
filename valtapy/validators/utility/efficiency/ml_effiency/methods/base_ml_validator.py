@@ -15,7 +15,7 @@ from sklearn.model_selection import train_test_split
 
 from valtapy.validators.utility.efficiency import EfficiencyValidator
 
-from .exceptions import (
+from ......exceptions.exceptions import (
     DataPreparationError,
     InvalidDataError,
     MetricsCalculationError,

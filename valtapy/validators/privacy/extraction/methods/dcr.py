@@ -1,19 +1,22 @@
-from Hefesto.train_test.test.privacy import Privacy
+from typing import Any, Dict
+
 import numpy as np
+
+from ...base_privacy import Privacy
 
 
 class DCR(Privacy):
-    def __init__(self, data, gen_data, path: str):
+    def __init__(self, data, gen_data, path: str = None):
         super().__init__(data=data, gen_data=gen_data, path=path)
         self.dcr = None
 
-    def calculate_dcr(self):
+    def calculate_dcr(self) -> float:
         """
         Calculate the Disclosure Control Ratio (DCR)
         """
         # Convert data to numpy arrays for easier manipulation
-        original = np.array(self.data)
-        generated = np.array(self.gen_data)
+        original = self.to_numpy(self.data)
+        generated = self.to_numpy(self.gen_data)
 
         # Ensure the arrays are the same length
         if len(original) != len(generated):
@@ -40,11 +43,18 @@ class DCR(Privacy):
 
         # The DCR is the mean of all calculated DCR values
         self.dcr = np.mean(dcr_values)
+        return self.dcr
 
     def write_dcr(self):
-        with open(self.path, "w") as file:
-            file.write(f"DCR: {self.dcr}\n")
+        if self.path:
+            with open(self.path, "w") as file:
+                file.write(f"DCR: {self.dcr}\n")
 
-    def execute(self):
-        self.calculate_dcr()
-        self.write_dcr()
+    def execute(self) -> Dict[str, Any]:
+        dcr_value = self.calculate_dcr()
+        if self.path:
+            self.write_dcr()
+        return {
+            "dcr": dcr_value,
+            "description": "Disclosure Control Ratio - measures frequency preservation",
+        }

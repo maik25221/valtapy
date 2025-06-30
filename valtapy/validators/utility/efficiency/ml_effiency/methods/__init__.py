@@ -7,7 +7,7 @@ from .base_ml_validator import (
     ValidationMetrics,
     ValidationTechnique,
 )
-from .exceptions import (
+from ......exceptions.exceptions import (
     DataPreparationError,
     InvalidDataError,
     MetricsCalculationError,
