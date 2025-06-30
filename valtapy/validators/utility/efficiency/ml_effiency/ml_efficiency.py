@@ -4,7 +4,7 @@ import pandas as pd
 
 from valtapy.interfaces import IValidator, ValidationBranch
 from valtapy.validators.utility.efficiency import EfficiencyValidator
-from valtapy.validators.utility.ml_effiency.methods import (
+from valtapy.validators.utility.efficiency.ml_effiency.methods import (
     TRTSValidator,
     TSTRValidator,
     TTRRValidator,
@@ -17,10 +17,23 @@ class MLEfficiencyValidator(EfficiencyValidator, IValidator):
     Concrete implementation that runs all ML efficiency techniques for utility validation.
 
     Implements the four standard techniques:
-    - TTRR: Train and Test on Real (Baseline)
+    - TTRR: Train and Test on Real (Baseline) - serves as reference point
     - TTSS: Train and Test on Synthetic (Internal Consistency)
     - TSTR: Train on Synthetic, Test on Real (Generalization)
     - TRTS: Train on Real, Test on Synthetic (Fidelity)
+
+    EFFICIENCY CALCULATION METHODOLOGY:
+    Efficiency is calculated as the difference between each technique's accuracy
+    and the baseline (TTRR) accuracy:
+
+    Efficiency = Technique_Accuracy - TTRR_Accuracy
+
+    - Positive values: Synthetic data performs better than real data baseline
+    - Negative values: Synthetic data performs worse than real data baseline
+    - Values near zero: Synthetic data performs equivalently to real data
+
+    This approach provides a direct measure of how much utility is gained or lost
+    when using synthetic data instead of real data for ML tasks.
     """
 
     def __init__(self, random_seed: int = 42, test_size: float = 0.2):
@@ -74,15 +87,20 @@ class MLEfficiencyValidator(EfficiencyValidator, IValidator):
     def _calculate_comparative_analysis(
         self, results: Dict[str, Any]
     ) -> Dict[str, Any]:
-        """Calculate comparative analysis between techniques"""
+        """Calculate comparative analysis between techniques using TTRR as baseline"""
         try:
             ttrr_acc = results.get("TTRR", {}).get("accuracy", 0)
             ttss_acc = results.get("TTSS", {}).get("accuracy", 0)
             tstr_acc = results.get("TSTR", {}).get("accuracy", 0)
             trts_acc = results.get("TRTS", {}).get("accuracy", 0)
 
+            # Calculate efficiency as difference from baseline (TTRR)
             return {
                 "baseline_performance": ttrr_acc,
+                "ttss_efficiency": ttss_acc - ttrr_acc if ttrr_acc > 0 else None,
+                "tstr_efficiency": tstr_acc - ttrr_acc if ttrr_acc > 0 else None,
+                "trts_efficiency": trts_acc - ttrr_acc if ttrr_acc > 0 else None,
+                # Keep legacy metrics for compatibility
                 "synthetic_consistency": ttss_acc,
                 "generalization_gap": (
                     abs(ttrr_acc - tstr_acc) if ttrr_acc > 0 else None
@@ -91,16 +109,31 @@ class MLEfficiencyValidator(EfficiencyValidator, IValidator):
                 "utility_preservation": (tstr_acc / ttrr_acc) if ttrr_acc > 0 else 0,
                 "synthetic_quality": (trts_acc / ttrr_acc) if ttrr_acc > 0 else 0,
             }
-        except Exception as e:
+        except (ValueError, TypeError, KeyError) as e:
             return {"error": str(e)}
 
     def _calculate_ml_efficiency_score(self, results: Dict[str, Any]) -> float:
-        """Calculate overall ML efficiency score based on all techniques"""
-        scores = []
-        weights = {"TTRR": 0.3, "TTSS": 0.2, "TSTR": 0.3, "TRTS": 0.2}
+        """Calculate overall ML efficiency score based on differences from baseline (TTRR)"""
+        try:
+            ttrr_acc = results.get("TTRR", {}).get("accuracy", 0)
 
-        for technique, weight in weights.items():
-            if technique in results and "accuracy" in results[technique]:
-                scores.append(results[technique]["accuracy"] * weight)
+            if ttrr_acc <= 0:
+                return 0.0
 
-        return sum(scores) if scores else 0.0
+            # Calculate efficiency scores as differences from baseline
+            efficiency_scores = []
+            technique_weights = {"TTSS": 0.3, "TSTR": 0.4, "TRTS": 0.3}
+
+            for technique, weight in technique_weights.items():
+                if technique in results and "accuracy" in results[technique]:
+                    technique_acc = results[technique]["accuracy"]
+                    efficiency = technique_acc - ttrr_acc  # Difference from baseline
+                    efficiency_scores.append(efficiency * weight)
+
+            # Overall efficiency is weighted average of individual efficiencies
+            overall_efficiency = sum(efficiency_scores) if efficiency_scores else 0.0
+
+            return overall_efficiency
+
+        except (ValueError, TypeError, ZeroDivisionError):
+            return 0.0
