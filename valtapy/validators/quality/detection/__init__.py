@@ -1,4 +1,4 @@
 from .detection import Detection
-from .isolation_forest import IsolationForestDetection
-from .ae import AEDetection
-from .lof import LOFDetection
+from .detection_orchestrator import QualityDetectionOrchestrator
+
+__all__ = ["Detection", "QualityDetectionOrchestrator"]

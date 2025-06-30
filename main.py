@@ -27,14 +27,24 @@ validator = Valtapy(results_directory="my_validation_results")
 # )
 
 # 2. Validar solo privacidad con todos los métodos integrados
-results = validator.validate(
-    real_data,
-    synthetic_data,
-    branches=["Privacy"],
-    save_results=True,
-    experiment_name="privacy_comprehensive",
-    save_format="json",
-)
+# results = validator.validate(
+#     real_data,
+#     synthetic_data,
+#     branches=["Privacy"],
+#     save_results=True,
+#     experiment_name="privacy_comprehensive",
+#     save_format="json",
+# )
+
+# 2. Validar solo calidad con todos los métodos integrados
+# results = validator.validate(
+#     real_data,
+#     synthetic_data,
+#     branches=["Quality"],
+#     save_results=True,
+#     experiment_name="quality_comprehensive",
+#     save_format="json",
+# )
 
 # 3. Validar sin guardar, luego guardar manualmente
 # results = validator.validate(real_data, synthetic_data, branches=["Utility"])
@@ -43,72 +53,6 @@ results = validator.validate(
 # filepath = validator.save_results(results, "manual_save", "csv")
 # print(f"Results saved to: {filepath}")
 
-# Guardar en todos los formatos
-saved_files = validator.save_results(results, "complete_analysis", "all")
-print("Files saved:")
-for format_type, path in saved_files.items():
-    print(f"  {format_type}: {path}")
-
-# Mostrar resultados de privacidad
-print("\n" + "=" * 50)
-print("RESULTADOS DE VALIDACIÓN DE PRIVACIDAD")
-print("=" * 50)
-
-if "Privacy" in results:
-    privacy_results = results["Privacy"]
-
-    print(
-        f"\nPuntuación general de privacidad: {privacy_results.get('overall_privacy_score', 'N/A'):.4f}"
-    )
-    print(f"K-anonimato estimado: {privacy_results.get('k_anonymity', 'N/A')}")
-
-    # Mostrar resultados de métodos de extracción
-    if "extraction_methods" in privacy_results:
-        print("\n--- MÉTODOS DE EXTRACCIÓN ---")
-        extraction = privacy_results["extraction_methods"]
-
-        if "dcr" in extraction and "dcr" in extraction["dcr"]:
-            print(f"DCR (Disclosure Control Ratio): {extraction['dcr']['dcr']:.4f}")
-
-        if (
-            "differential_privacy" in extraction
-            and "differential_privacy" in extraction["differential_privacy"]
-        ):
-            dp = extraction["differential_privacy"]["differential_privacy"]
-            print(f"Differential Privacy Score: {dp.get('privacy_score', 'N/A'):.4f}")
-            print(f"Epsilon: {dp.get('epsilon', 'N/A')}")
-            print(f"Delta: {dp.get('delta', 'N/A')}")
-
-        if "identity_attribute_disclosure" in extraction:
-            iad = extraction["identity_attribute_disclosure"]
-            print(
-                f"Identity Disclosure Rate: {iad.get('identity_disclosure_rate', 'N/A'):.4f}"
-            )
-            print(
-                f"Attribute Disclosure Rate: {iad.get('attribute_disclosure_rate', 'N/A'):.4f}"
-            )
-
-    # Mostrar resultados de métodos de inferencia
-    if "inference_methods" in privacy_results:
-        print("\n--- MÉTODOS DE INFERENCIA ---")
-        inference = privacy_results["inference_methods"]
-
-        if "membership_inference_attack" in inference:
-            mia = inference["membership_inference_attack"]
-            print(
-                f"Membership Inference Attack Accuracy: {mia.get('membership_inference_accuracy', 'N/A'):.4f}"
-            )
-
-        if "identity_attribute_disclosure_inference" in inference:
-            iad_inf = inference["identity_attribute_disclosure_inference"]
-            print(
-                f"Identity Disclosure Rate (Inference): {iad_inf.get('identity_disclosure_rate', 'N/A'):.4f}"
-            )
-            print(
-                f"Attribute Disclosure Rate (Inference): {iad_inf.get('attribute_disclosure_rate', 'N/A'):.4f}"
-            )
-
-print("\n" + "=" * 50)
 
 # ============================================================================
 # EJEMPLOS ADICIONALES DE VALIDACIÓN DE PRIVACIDAD
@@ -170,3 +114,81 @@ print("\n" + "=" * 50)
 # mia = MembershipInferenceAttack(real_data, synthetic_data)
 # mia_result = mia.execute()
 # print("Membership Inference Attack Result:", mia_result)
+
+# ============================================================================
+# EJEMPLOS ADICIONALES DE VALIDACIÓN DE CALIDAD
+# ============================================================================
+
+# Ejemplo 1: Solo métodos de detección de calidad
+# from valtapy.validators.quality.detection import QualityDetectionOrchestrator
+#
+# detection_orchestrator = QualityDetectionOrchestrator(
+#     real_data, synthetic_data, "quality_detection_results"
+# )
+# detection_results = detection_orchestrator.run_all_detections(contamination=0.05)
+# print("Detection Quality Results:", detection_results)
+
+# Ejemplo 2: Solo métodos estadísticos de calidad
+# from valtapy.validators.quality.statistics import QualityStatisticsOrchestrator
+#
+# statistics_orchestrator = QualityStatisticsOrchestrator(
+#     real_data, synthetic_data, "quality_statistics_results"
+# )
+# statistics_results = statistics_orchestrator.run_all_statistics()
+# print("Statistics Quality Results:", statistics_results)
+
+# Ejemplo 3: Validación de calidad con parámetros personalizados
+# from valtapy.validators.quality import QualityValidator
+#
+# quality_validator = QualityValidator(
+#     output_path="custom_quality_results",
+#     seed=123
+# )
+# quality_results = quality_validator.validate(real_data, synthetic_data)
+# print("Custom Quality Results:", quality_results)
+
+# Ejemplo 4: Ejecutar métodos individuales de calidad
+# from valtapy.validators.quality.detection.methods import IsolationForestDetection, LOFDetection
+# from valtapy.validators.quality.statistics.methods import Tests, Correlation
+#
+# # Isolation Forest individual
+# if_detector = IsolationForestDetection(real_data, synthetic_data, contamination=0.1)
+# if_result = if_detector.execute()
+# print("Isolation Forest Result:", if_result)
+#
+# # LOF individual
+# lof_detector = LOFDetection(real_data, synthetic_data, n_neighbors=15)
+# lof_result = lof_detector.execute()
+# print("LOF Result:", lof_result)
+#
+# # Statistical Tests individual
+# tests = Tests(real_data, synthetic_data, all_data=True)
+# tests_result = tests.execute()
+# print("Statistical Tests Result:", tests_result)
+#
+# # Correlation Analysis individual
+# correlation = Correlation(real_data, synthetic_data)
+# correlation_result = correlation.execute()
+# print("Correlation Analysis Result:", correlation_result)
+
+# Ejemplo 5: Validación completa (privacidad + calidad + utilidad)
+results = validator.validate(
+    real_data,
+    synthetic_data,
+    branches=["Privacy", "Quality", "Utility"],
+    save_results=True,
+    experiment_name="complete_validation",
+    save_format="all"
+)
+print("Complete Validation Results:", results)
+
+# Guardar en todos los formatos
+saved_files = validator.save_results(results, "complete_analysis", "all")
+print("Files saved:")
+for format_type, path in saved_files.items():
+    print(f"  {format_type}: {path}")
+
+# Mostrar resultados de privacidad
+print("\n" + "=" * 50)
+print("RESULTADOS DE VALIDACIÓN DE PRIVACIDAD")
+print("=" * 50)
