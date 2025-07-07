@@ -128,8 +128,3 @@ class AEDetection(Detection):
                 "quality_score": 0.0,
                 "method": "autoencoder_simulation",
             }
-        for idx, error in enumerate(reconstruction_errors):
-            if error > self.threshold:
-                self.bad_ele.append(self.synthetic_data[idx])
-            else:
-                self.good_ele.append(self.synthetic_data[idx])

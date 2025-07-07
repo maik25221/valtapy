@@ -1,9 +1,8 @@
 from typing import Any, Dict
 
 import numpy as np
-import pandas as pd
 
-from ...base_privacy import Privacy
+from valtapy.validators.privacy.base_privacy import Privacy
 
 
 class IdentityAttributeDisclosure(Privacy):

@@ -6,7 +6,7 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader, TensorDataset
 
-from ...base_privacy import Privacy
+from valtapy.validators.privacy.base_privacy import Privacy
 
 
 class DifferentialPrivacyModel(nn.Module):
