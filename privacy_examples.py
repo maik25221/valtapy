@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 
 from valtapy.validators.privacy import PrivacyValidator
-from valtapy.validators.privacy.extraction import PrivacyExtractionOrchestrator
+from valtapy.validators.privacy.similarity import PrivacyExtractionOrchestrator
 from valtapy.validators.privacy.inference import PrivacyInferenceOrchestrator
 
 
@@ -109,14 +109,14 @@ def main():
     print("=" * 60)
 
     # DCR individual
-    from valtapy.validators.privacy.extraction.methods import DCR
+    from valtapy.validators.privacy.similarity.methods import DCR
 
     dcr = DCR(real_data, synthetic_data)
     dcr_result = dcr.execute()
     print(f"DCR individual: {dcr_result['dcr']:.4f}")
 
     # Differential Privacy individual
-    from valtapy.validators.privacy.extraction.methods import DifferentialPrivacy
+    from valtapy.validators.privacy.similarity.methods import DifferentialPrivacy
 
     dp = DifferentialPrivacy(real_data, synthetic_data, epsilon=1.0, delta=1e-5)
     dp_result = dp.execute()

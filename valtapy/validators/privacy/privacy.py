@@ -5,7 +5,7 @@ import pandas as pd
 
 from valtapy.interfaces import IValidator, ValidationBranch
 
-from .extraction.extraction import PrivacyExtractionOrchestrator
+from .similarity.similarity import PrivacyExtractionOrchestrator
 from .inference.inference import PrivacyInferenceOrchestrator
 
 
