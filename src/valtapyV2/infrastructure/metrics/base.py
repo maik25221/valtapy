@@ -106,10 +106,9 @@ class MetricBase:
             
             splits = []
             kf = KFold(n_splits=n_splits, shuffle=True, random_state=random_state)
-            
-            # Use real data for splitting indices
+
             indices = np.arange(len(self._real_data))
-            
+
             for train_idx, test_idx in kf.split(indices):
                 train_real = self._real_data.iloc[train_idx]
                 test_real = self._real_data.iloc[test_idx]
@@ -128,24 +127,20 @@ class MetricBase:
             from sklearn.preprocessing import StandardScaler
             import numpy as np
             
-            # Use only numeric columns for KNN
             numeric_cols = self._get_numeric_columns()
             if not numeric_cols:
                 return {"error": "No numeric columns found for KNN computation"}
-            
+
             real_numeric = self._real_data[numeric_cols].fillna(0)
             synth_numeric = self._synth_data[numeric_cols].fillna(0)
-            
-            # Standardize data
+
             scaler = StandardScaler()
             real_scaled = scaler.fit_transform(real_numeric)
             synth_scaled = scaler.transform(synth_numeric)
-            
-            # Fit KNN on real data
+
             knn = NearestNeighbors(n_neighbors=k)
             knn.fit(real_scaled)
-            
-            # Find distances from synthetic to real
+
             distances, indices = knn.kneighbors(synth_scaled)
             
             return {

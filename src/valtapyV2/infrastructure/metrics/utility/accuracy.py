@@ -37,13 +37,12 @@ class AccuracyMetric(MetricBase):
     def compute(self) -> MetricResult:
         """Compute classification accuracy utility metric."""
         try:
-            # Check if target is specified
             dataset_spec = self._context.get("dataset_spec")
             target_col = None
-            
+
             if dataset_spec and hasattr(dataset_spec, 'target'):
                 target_col = dataset_spec.target
-            
+
             if not target_col or target_col not in self._real_data.columns:
                 return MetricResult(
                     id="utility.accuracy",
@@ -52,8 +51,7 @@ class AccuracyMetric(MetricBase):
                     family="utility",
                     purpose_tags=self.purpose_tags
                 )
-            
-            # Check if target is suitable for classification
+
             y_real = self._real_data[target_col]
             n_classes = y_real.nunique()
             
@@ -75,10 +73,9 @@ class AccuracyMetric(MetricBase):
                     purpose_tags=self.purpose_tags
                 )
             
-            # Get feature columns
+
             feature_cols = [col for col in self._real_data.columns if col != target_col]
-            numeric_features = [col for col in feature_cols 
-                              if pd.api.types.is_numeric_dtype(self._real_data[col])]
+            numeric_features = [col for col in feature_cols if pd.api.types.is_numeric_dtype(self._real_data[col])]
             
             if not numeric_features:
                 return MetricResult(
@@ -89,7 +86,6 @@ class AccuracyMetric(MetricBase):
                     purpose_tags=self.purpose_tags
                 )
             
-            # Prepare data
             X_real = self._real_data[numeric_features].fillna(0)
             X_synth = self._synth_data[numeric_features].fillna(0)
             y_synth = self._synth_data[target_col] if target_col in self._synth_data.columns else None
@@ -104,41 +100,34 @@ class AccuracyMetric(MetricBase):
                 )
             
             try:
-                # Use cached train/test splits
                 splits = self._get_train_test_splits(n_splits=3, random_state=42)
-                
-                tstr_accuracies = []  # Train on Synthetic, Test on Real
-                trtr_accuracies = []  # Train on Real, Test on Real
-                
+
+                tstr_accuracies = []
+                trtr_accuracies = []
+
                 for train_real, test_real in splits:
-                    # Prepare training and testing sets
                     X_train_real = train_real[numeric_features].fillna(0)
                     y_train_real = train_real[target_col]
                     X_test_real = test_real[numeric_features].fillna(0)
                     y_test_real = test_real[target_col]
-                    
-                    # Use first N synthetic samples for training
+
                     n_train = len(X_train_real)
                     X_train_synth = X_synth.iloc[:n_train]
                     y_train_synth = y_synth.iloc[:n_train]
-                    
-                    # Skip if test set is too small
+
                     if len(X_test_real) < 5:
                         continue
-                    
-                    # Check if we have all classes in training data
+
                     train_real_classes = set(y_train_real.unique())
                     train_synth_classes = set(y_train_synth.unique())
                     test_classes = set(y_test_real.unique())
-                    
+
                     if len(train_real_classes) < 2 or len(train_synth_classes) < 2:
-                        continue  # Skip folds without enough classes
-                    
-                    # Train classifiers
+                        continue
+
                     from sklearn.linear_model import LogisticRegression
                     from sklearn.metrics import accuracy_score
-                    
-                    # TSTR: Train on Synthetic, Test on Real
+
                     try:
                         model_tstr = LogisticRegression(max_iter=1000, random_state=42)
                         model_tstr.fit(X_train_synth, y_train_synth)
@@ -146,10 +135,8 @@ class AccuracyMetric(MetricBase):
                         acc_tstr = accuracy_score(y_test_real, y_pred_tstr)
                         tstr_accuracies.append(acc_tstr)
                     except:
-                        # Skip this fold if model fails
                         continue
-                    
-                    # TRTR: Train on Real, Test on Real
+
                     try:
                         model_trtr = LogisticRegression(max_iter=1000, random_state=42)
                         model_trtr.fit(X_train_real, y_train_real)
@@ -157,11 +144,10 @@ class AccuracyMetric(MetricBase):
                         acc_trtr = accuracy_score(y_test_real, y_pred_trtr)
                         trtr_accuracies.append(acc_trtr)
                     except:
-                        # Remove corresponding TSTR score if TRTR fails
                         if tstr_accuracies:
                             tstr_accuracies.pop()
                         continue
-                
+
                 if not tstr_accuracies or not trtr_accuracies:
                     return MetricResult(
                         id="utility.accuracy",
@@ -170,20 +156,17 @@ class AccuracyMetric(MetricBase):
                         family="utility",
                         purpose_tags=self.purpose_tags
                     )
-                
-                # Calculate utility score
+
                 mean_tstr = np.mean(tstr_accuracies)
                 mean_trtr = np.mean(trtr_accuracies)
-                
-                # Utility score: ratio of synthetic-trained to real-trained accuracy
+
                 if mean_trtr > 0:
                     utility_score = mean_tstr / mean_trtr
                 else:
                     utility_score = 0.0
-                
-                # Clamp to [0, 1] range
+
                 utility_score = min(1.0, max(0.0, utility_score))
-                
+
                 details = {
                     "tstr_accuracies": [float(a) for a in tstr_accuracies],
                     "trtr_accuracies": [float(a) for a in trtr_accuracies],
@@ -196,7 +179,6 @@ class AccuracyMetric(MetricBase):
                 }
                 
             except ImportError:
-                # Fallback if sklearn not available
                 utility_score = 0.5
                 details = {
                     "error": "sklearn not available, using fallback score",

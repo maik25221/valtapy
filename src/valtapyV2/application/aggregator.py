@@ -23,18 +23,15 @@ class Aggregator:
             Dictionary containing family scores and aggregated metrics
         """
         aggregates = {}
-        
-        # Default equal weights if not provided
+
         if weights is None:
             active_families = self._get_active_families(results)
             weights = {family: 1.0 / len(active_families) for family in active_families}
-        
-        # Normalize weights to sum to 1.0
+
         weight_sum = sum(weights.values())
         if weight_sum > 0:
             weights = {k: v / weight_sum for k, v in weights.items()}
-        
-        # Calculate family scores
+
         family_scores = {}
         for family in FAMILIES:
             family_results = [r for r in results if r.family == family]
@@ -43,24 +40,21 @@ class Aggregator:
                 family_scores[family] = family_score
                 aggregates[f"{family}_score"] = family_score
                 aggregates[f"{family}_count"] = len(family_results)
-        
-        # Calculate composite index if requested
+
         composite_score = self._calculate_composite_score(family_scores, weights)
         if composite_score is not None:
             aggregates["composite_score"] = composite_score
-        
-        # Add summary statistics
+
         all_values = [r.value for r in results]
         if all_values:
             aggregates["mean_metric_value"] = statistics.mean(all_values)
             aggregates["median_metric_value"] = statistics.median(all_values)
             aggregates["std_metric_value"] = statistics.stdev(all_values) if len(all_values) > 1 else 0.0
-        
-        # Add execution metadata
+
         aggregates["total_metrics"] = len(results)
         aggregates["successful_metrics"] = len([r for r in results if "error" not in r.details])
         aggregates["failed_metrics"] = len([r for r in results if "error" in r.details])
-        
+
         return aggregates
     
     def _get_active_families(self, results: List[MetricResult]) -> List[str]:
@@ -83,34 +77,16 @@ class Aggregator:
         """
         if not family_results:
             return 0.0
-        
-        # Filter out failed metrics
+
         successful_results = [r for r in family_results if "error" not in r.details]
         if not successful_results:
             return 0.0
-        
-        # Simple averaging - could be enhanced with normalization
+
         values = [r.value for r in successful_results]
-        
-        # Family-specific score calculation
-        if family == "fidelity":
-            # For fidelity, higher is better (closer to real data)
-            # Assume values are already normalized [0,1] or p-values
+
+        if family in {"fidelity", "utility", "privacy"}:
             return statistics.mean(values)
-        
-        elif family == "utility":
-            # For utility, higher is better (better ML performance)
-            # Assume values are already normalized [0,1]
-            return statistics.mean(values)
-        
-        elif family == "privacy":
-            # For privacy, interpretation depends on metric
-            # For now, assume higher is better (more private)
-            return statistics.mean(values)
-        
-        else:
-            # Default: simple average
-            return statistics.mean(values)
+        return statistics.mean(values)
     
     def _calculate_composite_score(self, family_scores: Dict[str, float], 
                                  weights: Dict[str, float]) -> Optional[float]:
