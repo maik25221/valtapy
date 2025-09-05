@@ -1,0 +1,25 @@
+data:
+  real: "examples/data/real.csv"
+  synthetic: "examples/data/synth.csv"
+  target: null
+  dtypes: {}
+
+evaluation:
+  purpose: "privacy_hardening"
+  metric_ids:
+    - "fidelity.ks"
+    - "utility.pmse"
+    - "privacy.nndr"
+  seed: 42
+  cv_splits: 3
+
+aggregation:
+  weights:
+    fidelity: 0.4
+    utility: 0.3
+    privacy: 0.3
+  composite_index: true
+
+report:
+  formats: ["json", "md"]
+  output_dir: "reports/run_demo"

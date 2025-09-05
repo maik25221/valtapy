@@ -1,0 +1,1 @@
+"""Interface layer: CLI and SDK for user interaction."""
