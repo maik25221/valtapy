@@ -25,27 +25,22 @@ def load_csv(file_path: str, **kwargs) -> pd.DataFrame:
         if not path.exists():
             raise SchemaError(f"File not found: {file_path}")
         
-        # Default CSV loading parameters
         default_params = {
             'na_values': ['', 'NA', 'N/A', 'null', 'NULL', 'None'],
             'keep_default_na': True,
             'skipinitialspace': True
         }
-        
-        # Merge with user parameters (user params take precedence)
+
         params = {**default_params, **kwargs}
-        
-        # Load the CSV
+
         df = pd.read_csv(file_path, **params)
-        
-        # Basic validation
+
         if df.empty:
             raise SchemaError(f"Loaded DataFrame is empty: {file_path}")
-        
+
         if len(df.columns) == 0:
             raise SchemaError(f"DataFrame has no columns: {file_path}")
-        
-        # Basic cleanup
+
         df = _basic_cleanup(df)
         
         return df
@@ -100,12 +95,12 @@ def save_csv(df: pd.DataFrame, file_path: str, **kwargs) -> None:
     try:
         path = Path(file_path)
         path.parent.mkdir(parents=True, exist_ok=True)
-        
+
         default_params = {
             'index': False,
             'na_rep': 'NA'
         }
-        
+
         params = {**default_params, **kwargs}
         df.to_csv(file_path, **params)
         
@@ -123,17 +118,13 @@ def _basic_cleanup(df: pd.DataFrame) -> pd.DataFrame:
     Returns:
         Cleaned DataFrame
     """
-    # Remove completely empty rows
     df = df.dropna(how='all')
-    
-    # Remove completely empty columns
+
     df = df.dropna(axis=1, how='all')
-    
-    # Strip whitespace from string columns
+
     string_columns = df.select_dtypes(include=['object']).columns
     for col in string_columns:
         df[col] = df[col].astype(str).str.strip()
-        # Replace empty strings with NaN
         df[col] = df[col].replace('', pd.NA)
     
     return df
@@ -161,10 +152,8 @@ def get_file_info(file_path: str) -> Dict[str, Any]:
             "suffix": path.suffix.lower()
         }
         
-        # Try to get more details for known formats
         if info["suffix"] == ".csv":
             try:
-                # Quick peek at the file
                 sample = pd.read_csv(file_path, nrows=5)
                 info.update({
                     "columns": list(sample.columns),

@@ -48,7 +48,7 @@ class NNDRMetric(MetricBase):
                     purpose_tags=self.purpose_tags
                 )
             
-            distances = knn_data["distances"]  # Shape: (n_synth, k)
+            distances = knn_data["distances"]
             
             if distances.shape[1] < 2:
                 return MetricResult(
@@ -59,36 +59,29 @@ class NNDRMetric(MetricBase):
                     purpose_tags=self.purpose_tags
                 )
             
-            # Calculate NNDR: ratio of 1st to 2nd nearest neighbor distance
-            first_nn_dist = distances[:, 0]   # Distance to nearest neighbor
-            second_nn_dist = distances[:, 1]  # Distance to second nearest neighbor
-            
-            # Avoid division by zero
+            first_nn_dist = distances[:, 0]
+            second_nn_dist = distances[:, 1]
+
             valid_mask = second_nn_dist > 1e-10
             
             if not np.any(valid_mask):
                 privacy_score = 0.0
                 details = {"error": "All second nearest neighbor distances are zero"}
             else:
-                # Compute ratios only for valid cases
-                ratios = np.full(len(first_nn_dist), 1.0)  # Default ratio = 1.0
+                ratios = np.full(len(first_nn_dist), 1.0)
                 ratios[valid_mask] = first_nn_dist[valid_mask] / second_nn_dist[valid_mask]
-                
-                # Privacy metrics
+
                 mean_ratio = np.mean(ratios)
                 median_ratio = np.median(ratios)
                 min_ratio = np.min(ratios)
-                
-                # Count potentially problematic cases (very low ratios)
+
                 low_ratio_threshold = 0.1
                 n_low_ratios = np.sum(ratios < low_ratio_threshold)
                 fraction_low_ratios = n_low_ratios / len(ratios)
-                
-                # Privacy score: higher ratios = better privacy
-                # Use median ratio as main score, but penalize low ratios
+
                 privacy_score = median_ratio * (1.0 - fraction_low_ratios * 0.5)
                 privacy_score = min(1.0, max(0.0, privacy_score))
-                
+
                 details = {
                     "mean_nndr": float(mean_ratio),
                     "median_nndr": float(median_ratio),
@@ -102,8 +95,7 @@ class NNDRMetric(MetricBase):
                     "low_ratio_threshold": low_ratio_threshold,
                     "k_neighbors": knn_data["k"]
                 }
-                
-                # Add percentile information
+
                 percentiles = [10, 25, 75, 90]
                 for p in percentiles:
                     details[f"nndr_p{p}"] = float(np.percentile(ratios, p))

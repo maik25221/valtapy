@@ -33,7 +33,6 @@ class CorrelationDeltaMetric(MetricBase):
     def compute(self) -> MetricResult:
         """Compute correlation matrix differences."""
         try:
-            # Get cached correlation matrices
             real_corr = self._get_correlation_matrix("real")
             synth_corr = self._get_correlation_matrix("synth")
             
@@ -46,7 +45,6 @@ class CorrelationDeltaMetric(MetricBase):
                     purpose_tags=self.purpose_tags
                 )
             
-            # Ensure same columns in both matrices
             common_cols = real_corr.columns.intersection(synth_corr.columns)
             if len(common_cols) < 2:
                 return MetricResult(
@@ -60,31 +58,25 @@ class CorrelationDeltaMetric(MetricBase):
             real_corr = real_corr.loc[common_cols, common_cols]
             synth_corr = synth_corr.loc[common_cols, common_cols]
             
-            # Calculate correlation differences
             corr_diff = real_corr - synth_corr
-            
-            # Extract upper triangle (excluding diagonal) to avoid double counting
+
             mask = np.triu(np.ones_like(corr_diff, dtype=bool), k=1)
             upper_triangle_diff = corr_diff.values[mask]
-            
-            # Calculate metrics
+
             mean_abs_diff = np.mean(np.abs(upper_triangle_diff))
             max_abs_diff = np.max(np.abs(upper_triangle_diff))
             rmse = np.sqrt(np.mean(upper_triangle_diff**2))
-            
-            # Calculate correlation between correlation matrices
+
             real_upper = real_corr.values[mask]
             synth_upper = synth_corr.values[mask]
-            
+
             if len(real_upper) > 1:
                 correlation_similarity = np.corrcoef(real_upper, synth_upper)[0, 1]
                 if np.isnan(correlation_similarity):
                     correlation_similarity = 0.0
             else:
                 correlation_similarity = 1.0
-            
-            # Convert to fidelity score (1 - normalized error)
-            # Use mean absolute difference as primary metric
+
             fidelity_score = max(0.0, 1.0 - mean_abs_diff)
             
             details = {

@@ -36,7 +36,7 @@ class KSTestMetric(MetricBase):
         """Compute KS test statistics for all numeric columns."""
         try:
             numeric_columns = self._get_numeric_columns()
-            
+
             if not numeric_columns:
                 return MetricResult(
                     id="fidelity.ks",
@@ -45,49 +45,41 @@ class KSTestMetric(MetricBase):
                     family="fidelity",
                     purpose_tags=self.purpose_tags
                 )
-            
+
             column_results = {}
             p_values = []
             statistics = []
-            
+
             for col in numeric_columns:
                 try:
-                    # Get data for this column, removing NaNs
                     real_col = self._real_data[col].dropna()
                     synth_col = self._synth_data[col].dropna()
-                    
+
                     if len(real_col) < 10 or len(synth_col) < 10:
-                        # Skip columns with too little data
                         column_results[col] = {
                             "error": f"Insufficient data points (real: {len(real_col)}, synth: {len(synth_col)})"
                         }
                         continue
-                    
-                    # Perform KS test
+
                     statistic, p_value = ks_2samp(real_col, synth_col)
-                    
+
                     column_results[col] = {
                         "ks_statistic": float(statistic),
                         "p_value": float(p_value),
-                        "significant": p_value < 0.05,  # Standard significance level
+                        "significant": p_value < 0.05,
                         "real_samples": len(real_col),
                         "synth_samples": len(synth_col)
                     }
-                    
+
                     p_values.append(p_value)
                     statistics.append(statistic)
-                    
+
                 except Exception as e:
                     column_results[col] = {"error": str(e)}
-            
-            # Calculate overall metrics
+
             if p_values:
-                # Use geometric mean of p-values as overall score
-                # Higher p-values = better fidelity
                 overall_p_value = np.exp(np.mean(np.log(np.maximum(p_values, 1e-10))))
                 mean_statistic = np.mean(statistics)
-                
-                # Convert to 0-1 score where 1 is perfect fidelity
                 fidelity_score = overall_p_value
             else:
                 overall_p_value = 0.0
