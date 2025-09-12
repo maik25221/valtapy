@@ -4,8 +4,10 @@ import pytest
 import sys
 from pathlib import Path
 
-# Add src to path for imports
-sys.path.append(str(Path(__file__).parent.parent.parent.parent.parent.parent / "src"))
+# Add project root and src to path for imports
+project_root = Path(__file__).parent.parent.parent.parent.parent.parent
+sys.path.insert(0, str(project_root / "src"))
+sys.path.insert(0, str(project_root))
 
 from valtapyV2.infrastructure.metrics.privacy.membership_inference import MembershipInferenceMetric
 from valtapyV2.domain.entities import MetricResult
@@ -13,7 +15,7 @@ from tests.utils.data_generators import (
     generate_tabular_data,
     create_identical_datasets,
     create_completely_different_datasets,
-    create_correlated_datasets
+    generate_correlated_datasets
 )
 from tests.utils.test_helpers import (
     assert_metric_result_structure,
@@ -85,7 +87,7 @@ class TestMembershipInferenceMetric:
     
     def test_correlated_datasets_moderate_privacy(self):
         """Test MIA with moderately correlated datasets."""
-        real_data, synth_data = create_correlated_datasets(
+        real_data, synth_data = generate_correlated_datasets(
             n_samples=80,
             correlation=0.6,
             noise_level=0.3
@@ -421,7 +423,7 @@ class TestMembershipInferenceMetric:
         """Test that MIA works with caching for KNN computations."""
         from valtapyV2.infrastructure.runtime.cache import StatsStore
         
-        real_data, synth_data = create_correlated_datasets(n_samples=45, correlation=0.7)
+        real_data, synth_data = generate_correlated_datasets(n_samples=45, correlation=0.7)
         real_df = convert_to_pandas_mock(real_data)
         synth_df = convert_to_pandas_mock(synth_data)
         

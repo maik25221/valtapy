@@ -4,8 +4,10 @@ import pytest
 import sys
 from pathlib import Path
 
-# Add src to path for imports
-sys.path.append(str(Path(__file__).parent.parent.parent.parent.parent.parent / "src"))
+# Add project root and src to path for imports
+project_root = Path(__file__).parent.parent.parent.parent.parent.parent
+sys.path.insert(0, str(project_root / "src"))
+sys.path.insert(0, str(project_root))
 
 from valtapyV2.infrastructure.metrics.utility.accuracy import AccuracyMetric
 from valtapyV2.domain.entities import MetricResult, DatasetSpec
@@ -13,7 +15,7 @@ from tests.utils.data_generators import (
     generate_tabular_data,
     create_identical_datasets,
     create_completely_different_datasets,
-    create_correlated_datasets
+    generate_correlated_datasets
 )
 from tests.utils.test_helpers import (
     assert_metric_result_structure,

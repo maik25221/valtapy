@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Dict, Any, List
 import json
 
-from ..utils.data_generators import dict_list_to_csv_string
+from .data_generators import dict_list_to_csv_string
 
 
 def create_temp_csv_files(real_data: List[Dict], synth_data: List[Dict]) -> tuple[str, str]:
@@ -53,7 +53,7 @@ def cleanup_temp_files(*file_paths: str) -> None:
 
 def assert_metric_result_structure(result, expected_id: str, expected_family: str):
     """Assert that a metric result has the expected structure."""
-    from src.valtapyV2.domain.entities import MetricResult
+    from valtapyV2.domain.entities import MetricResult
     
     assert isinstance(result, MetricResult)
     assert result.id == expected_id
@@ -84,7 +84,7 @@ def create_mock_context(include_stats_store: bool = True, **kwargs) -> Dict[str,
     context = {"seed": 42}
     
     if include_stats_store:
-        from src.valtapyV2.infrastructure.runtime.cache import StatsStore
+        from valtapyV2.infrastructure.runtime.cache import StatsStore
         context["stats_store"] = StatsStore()
     
     context.update(kwargs)
