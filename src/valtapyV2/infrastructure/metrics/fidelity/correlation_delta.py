@@ -4,8 +4,8 @@ import pandas as pd
 import numpy as np
 from typing import Self, Dict, Any
 
-from ...registry import register
-from ...base import MetricBase
+from ..registry import register
+from ..base import MetricBase
 from ....domain.entities import MetricResult
 
 

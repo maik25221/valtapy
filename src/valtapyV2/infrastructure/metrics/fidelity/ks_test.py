@@ -5,8 +5,8 @@ from typing import Self, Dict, Any
 from scipy.stats import ks_2samp
 import numpy as np
 
-from ...registry import register
-from ...base import MetricBase
+from ..registry import register
+from ..base import MetricBase
 from ....domain.entities import MetricResult
 
 
