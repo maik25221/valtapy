@@ -1,0 +1,55 @@
+{
+  "pipeline": {
+    "name": "Hepatitis Evaluation with Privacy (MIA)",
+    "description": "Evaluate fidelity and privacy of CTGAN synthetic data",
+    "enabled_phases": ["ingestion", "preprocessing", "evaluation"],
+    "output_file": "results/evaluation_results_with_mia.json"
+  },
+  "data_sources": {
+    "real": {
+      "path": "data/real/a_hepatitis_sampling_baseline.csv",
+      "format": "csv",
+      "read_params": {
+        "encoding": "utf-8"
+      }
+    },
+    "synthetic": {
+      "path": "data/synt/f_hepatitis_CTGAN_syn_best.csv",
+      "format": "csv",
+      "read_params": {
+        "encoding": "utf-8"
+      }
+    }
+  },
+  "preprocessing": {
+    "enabled": true,
+    "config": {
+      "drop_empty_rows": true,
+      "drop_empty_columns": true,
+      "na_strategy": "keep"
+    }
+  },
+  "evaluation": {
+    "enabled": true,
+    "metrics": [
+      {
+        "metric_id": "fidelity.ks",
+        "enabled": true,
+        "parameters": {
+          "significance_level": 0.05
+        }
+      },
+      {
+        "metric_id": "privacy.mia",
+        "enabled": true,
+        "parameters": {
+          "classifier": "random_forest",
+          "n_splits": 5,
+          "test_size": 0.3
+        }
+      }
+    ],
+    "random_seed": 42,
+    "cache_enabled": false
+  }
+}

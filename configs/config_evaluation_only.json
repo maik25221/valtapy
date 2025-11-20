@@ -1,0 +1,33 @@
+{
+  "pipeline": {
+    "name": "Evaluation Only - No Preprocessing",
+    "description": "Skip preprocessing and run evaluation directly on raw data",
+    "enabled_phases": ["ingestion", "evaluation"],
+    "output_file": "results/evaluation_results_no_preproc.json"
+  },
+  "data_sources": {
+    "real": {
+      "path": "data/real/a_hepatitis_sampling_baseline.csv",
+      "format": "csv"
+    },
+    "synthetic": {
+      "path": "data/synt/f_hepatitis_CTGAN_syn_best.csv",
+      "format": "csv"
+    }
+  },
+  "preprocessing": {
+    "enabled": false
+  },
+  "evaluation": {
+    "enabled": true,
+    "metrics": [
+      {
+        "metric_id": "fidelity.ks",
+        "enabled": true,
+        "parameters": {}
+      }
+    ],
+    "random_seed": 42,
+    "cache_enabled": false
+  }
+}

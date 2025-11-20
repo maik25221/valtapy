@@ -1,0 +1,1 @@
+"""Ingestion phase - Data loading and initial validation."""

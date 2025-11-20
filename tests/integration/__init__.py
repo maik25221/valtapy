@@ -1,1 +1,1 @@
-"""Integration tests for ValtaPy."""
+"""Integration tests package."""

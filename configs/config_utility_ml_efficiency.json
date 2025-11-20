@@ -1,0 +1,75 @@
+{
+  "pipeline": {
+    "name": "ML Efficiency Utility Evaluation",
+    "description": "Evaluate synthetic data utility using ML efficiency metrics (TTR, TTS, TRTS, TSTR, TTRS)",
+    "enabled_phases": ["ingestion", "preprocessing", "evaluation"],
+    "output_file": "results/evaluation_results_ml_utility.json"
+  },
+  "data_sources": {
+    "real": {
+      "path": "data/real/a_hepatitis_sampling_baseline.csv",
+      "format": "csv"
+    },
+    "synthetic": {
+      "path": "data/synt/f_hepatitis_CTGAN_syn_best.csv",
+      "format": "csv"
+    }
+  },
+  "preprocessing": {
+    "enabled": true,
+    "config": {
+      "drop_empty_rows": true,
+      "drop_empty_columns": true,
+      "na_strategy": "drop",
+      "enforce_consistent_types": true,
+      "normalize_numeric": false,
+      "encode_categorical": true
+    }
+  },
+  "evaluation": {
+    "enabled": true,
+    "metrics": [
+      {
+        "metric_id": "ml_efficiency_ttr",
+        "enabled": true,
+        "parameters": {
+          "test_size": 0.2,
+          "random_seed": 42
+        }
+      },
+      {
+        "metric_id": "ml_efficiency_tts",
+        "enabled": true,
+        "parameters": {
+          "test_size": 0.2,
+          "random_seed": 42
+        }
+      },
+      {
+        "metric_id": "ml_efficiency_trts",
+        "enabled": true,
+        "parameters": {
+          "random_seed": 42
+        }
+      },
+      {
+        "metric_id": "ml_efficiency_tstr",
+        "enabled": true,
+        "parameters": {
+          "test_size": 0.2,
+          "random_seed": 42
+        }
+      },
+      {
+        "metric_id": "ml_efficiency_ttrs",
+        "enabled": true,
+        "parameters": {
+          "test_size": 0.2,
+          "random_seed": 42
+        }
+      }
+    ],
+    "random_seed": 42,
+    "cache_enabled": false
+  }
+}

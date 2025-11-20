@@ -179,6 +179,10 @@ pyrightconfig.json
 catboost_info/
 my_validation_results/
 
+# Evaluation results (but keep folder structure)
+results/*.json
+!results/.gitkeep
+
 #Claude
 .claude/
 CLAUDE.md

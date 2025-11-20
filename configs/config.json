@@ -1,0 +1,44 @@
+{
+  "pipeline": {
+    "name": "Hepatitis Data Evaluation",
+    "description": "Evaluate CTGAN synthetic hepatitis data against baseline",
+    "enabled_phases": ["ingestion", "preprocessing", "evaluation"],
+    "output_file": "evaluation_results.json"
+  },
+  "data_sources": {
+    "real": {
+      "path": "data/real/a_hepatitis_sampling_baseline.csv",
+      "format": "csv",
+      "read_params": {
+        "encoding": "utf-8"
+      }
+    },
+    "synthetic": {
+      "path": "data/synt/f_hepatitis_CTGAN_syn_best.csv",
+      "format": "csv",
+      "read_params": {
+        "encoding": "utf-8"
+      }
+    }
+  },
+  "preprocessing": {
+    "enabled": true,
+    "config": {
+      "drop_empty_rows": true,
+      "drop_empty_columns": true,
+      "na_strategy": "keep"
+    }
+  },
+  "evaluation": {
+    "enabled": true,
+    "metrics": [
+      {
+        "metric_id": "fidelity.ks",
+        "enabled": true,
+        "parameters": {}
+      }
+    ],
+    "random_seed": 42,
+    "cache_enabled": false
+  }
+}

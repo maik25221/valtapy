@@ -1,0 +1,60 @@
+{
+  "pipeline": {
+    "name": "Full Pipeline - All Phases",
+    "description": "Complete pipeline with validation, preprocessing, and evaluation",
+    "enabled_phases": ["ingestion", "validation", "preprocessing", "evaluation"],
+    "output_file": "results/evaluation_results_full.json"
+  },
+  "data_sources": {
+    "real": {
+      "path": "data/real/a_hepatitis_sampling_baseline.csv",
+      "format": "csv",
+      "read_params": {
+        "encoding": "utf-8",
+        "na_values": ["", "NA", "N/A", "null", "NULL", "None"]
+      }
+    },
+    "synthetic": {
+      "path": "data/synt/f_hepatitis_CTGAN_syn_best.csv",
+      "format": "csv",
+      "read_params": {
+        "encoding": "utf-8",
+        "na_values": ["", "NA", "N/A", "null", "NULL", "None"]
+      }
+    }
+  },
+  "validation": {
+    "enabled": true,
+    "config": {
+      "check_schema": true,
+      "check_data_types": true,
+      "check_column_alignment": true,
+      "strict_mode": false
+    }
+  },
+  "preprocessing": {
+    "enabled": true,
+    "config": {
+      "drop_empty_rows": true,
+      "drop_empty_columns": true,
+      "na_strategy": "keep",
+      "enforce_consistent_types": false,
+      "normalize_numeric": false,
+      "encode_categorical": false
+    }
+  },
+  "evaluation": {
+    "enabled": true,
+    "metrics": [
+      {
+        "metric_id": "fidelity.ks",
+        "enabled": true,
+        "parameters": {
+          "significance_level": 0.05
+        }
+      }
+    ],
+    "random_seed": 42,
+    "cache_enabled": true
+  }
+}
